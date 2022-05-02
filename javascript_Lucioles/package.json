@@ -5,19 +5,19 @@
   "name": "esp_lucioles",
   "version": "1.0.0",
   "description": "Supervision ESP Lucioles v2021",
-  "main": "node_lucioles_v4.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node_lucioles_v4.js"
+    "start": "server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gmenez/ESP_Lucioles.git"
+    "url": "git+https://github.com/AgrebiJihene/ProjetIOT.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/gmenez/ESP_Lucioles/issues"
+    "url": "https://github.com/AgrebiJihene/ProjetIOT/issues"
   },
   "homepage": "https://github.com/gmenez/ESP_Lucioles#readme",
   "dependencies": {

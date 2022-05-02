@@ -7,16 +7,14 @@ var path = require('path');
 //--- MQTT module
 const mqtt = require('mqtt')
 // Topics MQTT
-const TOPIC_LIGHT = 'sensors/light'
-const TOPIC_TEMP  = 'sensors/temp'
-
+//const TOPIC_LIGHT = 'my/sensors/light'
+const TOPIC_TEMP  = 'iot/M1Miage2022'
 //---  The MongoDB module exports MongoClient, and that's what
 // we'll use to connect to a MongoDB database.
 // We can use an instance of MongoClient to connect to a cluster,
 // access the database in that cluster,
 // and close the connection to that cluster.
 const {MongoClient} = require('mongodb');
-
 //----------------------------------------------------------------
 // This function will retrieve a list of databases in our cluster and
 // print the results in the console.
@@ -57,21 +55,25 @@ async function v0(){
 	dbo = mg_client.db(mongoName);
 
 	// Remove "old collections : temp and light
-	dbo.listCollections({name: "temp"})
+	dbo.listCollections({name: "M1Miage2022"})
 	    .next(function(err, collinfo) {
 		if (collinfo) { // The collection exists
 		    //console.log('Collection temp already exists');
-		    dbo.collection("temp").drop() 
+		    dbo.collection("M1Miage2022").drop() 
 		}
 	    });
 
-	dbo.listCollections({name: "light"})
+	/*dbo.listCollections({name: "light"})
 	    .next(function(err, collinfo) {
 		if (collinfo) { // The collection exists
 		    //console.log('Collection temp already exists');
 		    dbo.collection("light").drop() 
 		}
-	    });
+	    });*/
+	
+
+
+
 
 	//===============================================
 	// Connexion au broker MQTT distant
@@ -85,12 +87,12 @@ async function v0(){
 	// Des la connexion, le serveur NodeJS s'abonne aux topics MQTT 
 	//
 	client_mqtt.on('connect', function () {
-	    client_mqtt.subscribe(TOPIC_LIGHT, function (err) {
+	   /* client_mqtt.subscribe(TOPIC_LIGHT, function (err) {
 		if (!err) {
 		    //client_mqtt.publish(TOPIC_LIGHT, 'Hello mqtt')
 		    console.log('Node Server has subscribed to ', TOPIC_LIGHT);
 		}
-	    })
+	    })*/
 	    client_mqtt.subscribe(TOPIC_TEMP, function (err) {
 		if (!err) {
 		    //client_mqtt.publish(TOPIC_TEMP, 'Hello mqtt')
@@ -110,8 +112,9 @@ async function v0(){
 
 	    // Parsing du message suppos� recu au format JSON
 	    message = JSON.parse(message);
-	    wh = message.who
-	    val = message.value
+	    wh = message.info.ident
+	    temp = message.status.temperature
+		light=message.status.light
 
 	    // Debug : Gerer une liste de who pour savoir qui utilise le node server	
 	    let wholist = []
@@ -130,8 +133,10 @@ async function v0(){
 	    var frTime = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
 	    var new_entry = { date: frTime, // timestamp the value 
 			      who: wh,      // identify ESP who provide 
-			      value: val    // this value
+			      valueTemperature: temp,
+				  valueLight: light    // this value
 			    };
+
 	    
 	    // On recupere le nom basique du topic du message
 	    var key = path.parse(topic.toString()).base;
@@ -143,6 +148,12 @@ async function v0(){
 		"\ninserted in db in collection :", key);
 	    });
 
+	
+	
+
+	
+
+
 	    // Debug : voir les collections de la DB 
 	    //dbo.listCollections().toArray(function(err, collInfos) {
 		// collInfos is an array of collection info objects
@@ -151,6 +162,8 @@ async function v0(){
 	    //});
 	}) // end of 'message' callback installation
 
+
+	
 	//================================================================
 	// Fermeture de la connexion avec la DB lorsque le NodeJS se termine.
 	//
@@ -164,6 +177,7 @@ async function v0(){
     });// end of MongoClient.connect
 }// end def main
 
+
 //================================================================
 //==== Demarrage BD et MQTT =======================
 //================================================================
@@ -175,6 +189,7 @@ v0().catch(console.error);
 const express = require('express');
 // et pour permettre de parcourir les body des requetes
 const bodyParser = require('body-parser');
+const { userInfo } = require('os');
 
 const app = express();
 
@@ -214,9 +229,9 @@ app.get('/esp/:what', function (req, res) {
     // cf https://stackabuse.com/get-query-strings-and-parameters-in-express-js/
     console.log(req.originalUrl);
     
-    wh = req.query.who // get the "who" param from GET request
+   wh = req.query.who// get the "who" param from GET request
     // => gives the Id of the ESP we look for in the db	
-    wa = req.params.what // get the "what" from the GET request : temp or light ?
+    wa = req.params.what// get the "what" from the GET request : temp or light ?
     
     console.log("\n--------------------------------");
     console.log("A client/navigator ", req.ip);
